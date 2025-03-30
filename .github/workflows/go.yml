@@ -1,0 +1,50 @@
+name: 发布版本
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: 创建发布版本
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 设置Go环境
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.4'
+
+      - name: 构建多平台二进制文件
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "构建版本: $VERSION"
+          
+          # 构建Windows版本
+          GOOS=windows GOARCH=amd64 go build -o psc-$VERSION-windows-amd64.exe -v ./cmd/psc
+          
+          # 构建Linux版本
+          GOOS=linux GOARCH=amd64 go build -o psc-$VERSION-linux-amd64 -v ./cmd/psc
+          
+          # 构建macOS版本
+          GOOS=darwin GOARCH=amd64 go build -o psc-$VERSION-darwin-amd64 -v ./cmd/psc
+          GOOS=darwin GOARCH=arm64 go build -o psc-$VERSION-darwin-arm64 -v ./cmd/psc
+
+      - name: 创建发布
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            psc-${{ github.ref_name }}-windows-amd64.exe
+            psc-${{ github.ref_name }}-linux-amd64
+            psc-${{ github.ref_name }}-darwin-amd64
+            psc-${{ github.ref_name }}-darwin-arm64
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
