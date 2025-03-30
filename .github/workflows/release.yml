@@ -3,7 +3,10 @@ name: 发布版本
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -18,19 +21,19 @@ jobs:
       - name: 设置Go环境
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.4'
+          go-version: "1.23.4"
 
       - name: 构建多平台二进制文件
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "构建版本: $VERSION"
-          
+
           # 构建Windows版本
           GOOS=windows GOARCH=amd64 go build -o psc-$VERSION-windows-amd64.exe -v ./cmd/psc
-          
+
           # 构建Linux版本
           GOOS=linux GOARCH=amd64 go build -o psc-$VERSION-linux-amd64 -v ./cmd/psc
-          
+
           # 构建macOS版本
           GOOS=darwin GOARCH=amd64 go build -o psc-$VERSION-darwin-amd64 -v ./cmd/psc
           GOOS=darwin GOARCH=arm64 go build -o psc-$VERSION-darwin-arm64 -v ./cmd/psc
